@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>PF Curso Javascript Master</title>
+
+    <style>
+
+            body {
+                width: 95%;
+                font-family: "Comic Sans MS", "Comic Sans";
+            }
+
+            .flex {
+                display: flex;
+                flex-flow: row nowrap;
+            }
+
+            .flex-row {
+                width: 80%;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-evenly;
+                text-align: center;
+            }
+
+            .flex-column {
+                width: 20%;
+                display: flex;
+                flex-flow: column wrap;
+            }
+
+            .product {
+                width:200px;
+                /*margin-top:10px;*/
+                /*background-color: lightgreen;*/
+                margin: 10px;
+                border: 1px solid #CADFE4;
+            }
+
+            img {
+                height: 130px;
+                width: 180px;
+                padding: 10px;
+            }
+
+            input {
+                margin-top: 5px;
+            }
+
+            button {
+                margin:5px 0px;
+            }
+
+            .my-button {
+                background-color: #4CAF50; /* Green */
+                border: none;
+                color: white;
+                padding: 5px 10px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 14px;
+                cursor: pointer;
+            }
+
+            .text-10 {
+                font-size: 10px;
+            }
+
+            .text-12 {
+                font-size: 12px;
+            }
+
+            ::placeholder {
+                font-family: "Comic Sans MS", "Comic Sans";
+            }
+
+    </style>
+    
+</head>
+<body>
+    
+    <div class="flex">
+
+        <div class="flex-row" id="products">
+            
+        </div>
+
+        <div class="flex-column" id="login-cart">
+
+            <div class="login">
+                <div id="not-loged">
+                    <p>Sign in</p>
+                    <form action="" method="post" id="form-login">
+                        <input type="email" name="email" id="email" placeholder="user">
+                        <input type="password" name="password" id="password" placeholder="pass">
+                        <button type="submit" class="my-button"> Sign-in </button>
+                    </form>
+                </div>
+                <div id="loged">
+                    <p>Sign out <a id="a-user" href="#" onclick="logout()"></a> </p>
+                </div>
+            </div>
+            
+            <div class="cart">
+                <p>Cart</p>
+                <form action="" method="post" id="form-cart">
+                    
+                    <div id="cart" class="text-12">
+
+                    </div>
+
+                    <button id="button-buy" type="submit" class="my-button"> Buy </button>
+                </form>
+            </div>
+            
+            <div class="text-10">
+                <p>Data Sign In</p>
+                <ul>
+                    <li>user: user@escalab.cl</li>
+                    <li>pass: giveme140points</li>
+                </ul>
+                <button class="my-button" onclick="resetValues()">Reset values</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!--
+    <script src="./assets/js/script3.js"></script>
+    -->
+    <script>
+
+        class Product {
+            constructor(id, name, price, stock) {
+                this.id = id
+                this.image = 'https://www.mountaingoatsoftware.com/uploads/blog/2016-09-06-what-is-a-product-quote.png'
+                this.name = name;
+                this.price = price;
+                this.stock = stock; 
+                this.incart = 0;   
+            }
+        }
+
+        class ProductCart {
+            constructor(id, image ,name, price, units) {
+                this.id = id
+                this.image = image;
+                this.name = name;
+                this.price = price;
+                this.units = units;    
+            }
+        }
+
+        class Cart {
+            constructor(totalProducts = 0, tax = 0, total = 0, dolar = 900) {
+                this.totalProducts = totalProducts;
+                this.tax = tax;
+                this.total = total;
+                this.dolar = dolar;
+                this.products = [];
+
+            }
+
+            loadStorage(totalProducts, tax, total, dolar, products) {
+                this.totalProducts = totalProducts;
+                this.tax = tax;
+                this.total = total;
+                this.dolar = dolar;
+                this.products = products;
+
+            }
+
+            addProduct = (product) => {
+
+                const { id, image, name, price } = product;
+                
+                const prd = this.products.filter( p => p.id === id);
+
+                if (prd.length != 0) {
+                    this.products.forEach(p => {
+                        if (p.id === id) {
+                            p.units += 1;
+                        }
+                    })
+                } else {
+                    this.products.push(new ProductCart(id,image,name,price,1));
+                    this.tax += 0.5;
+                }
+
+                this.total += price;
+
+            }
+        }
+
+        const cart = new Cart(0,2,0,850);
+        const products = [];
+
+        const formLogin = document.getElementById('form-login');
+        const formCart = document.getElementById('form-cart');
+        const buttonBuy = document.getElementById('button-buy');
+
+        const submitLogin = (event) => {
+            event.preventDefault();
+
+            const inputMail = document.getElementById('email');
+            const inputPassword = document.getElementById('password');
+
+            if ( ( inputMail.value !== '' ) &&  ( inputPassword.value !== '' ) )  {
+
+                if ( ( inputMail.value === 'user@escalab.cl' ) &&  ( inputPassword.value === 'giveme140points' ) )  {
+                    sessionStorage.setItem('user', inputMail.value);
+                    validateSession();
+                } else {
+                    alert('user and pass valid are required');
+                }
+
+            } else {
+                alert('user and pass required');
+            }
+
+        }
+
+
+        const simulateCart = async () => {
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+
+            const buttons = document.querySelectorAll('button.my-button');
+            buttons.forEach(btn => btn.disabled = false);
+            clearDiv(divCart);
+            
+            const p = document.createElement('p');
+            p.innerText = 'Thanks for buying in localShow Order ID ABC123456789';
+            divCart.appendChild(p);
+            localStorage.removeItem('cart');
+            
+            products.forEach(p => p.incart = 0);
+            drawProducts();
+            localStorage.setItem('products', JSON.stringify(products));
+
+        }
+
+
+        const submitCart = (event) => {
+            event.preventDefault();
+            //simulateCart().then( () => console.log(1));
+            const buttons = document.querySelectorAll('button.my-button');
+            buttons.forEach(btn => btn.disabled = true);
+            clearDiv(divCart);
+            const p = document.createElement('p');
+            p.innerText = 'Process the cart......';
+            divCart.appendChild(p);
+            simulateCart();
+        }
+
+        formLogin.addEventListener('submit', submitLogin);
+        formCart.addEventListener('submit', submitCart);
+
+        const loadStorage = () => {
+            const productsStorage = JSON.parse(localStorage.getItem('products'));
+
+            if (productsStorage !== null) {
+                productsStorage.forEach(p => products.push(p));
+            }
+
+            const cartStorage = JSON.parse(localStorage.getItem('cart'));
+
+            if (cartStorage !== null) {
+                cart.loadStorage(cartStorage.totalProducts
+                                , cartStorage.tax
+                                , cartStorage.total
+                                , cartStorage.dolar
+                                , cartStorage.products);
+                drawCart();
+            }
+        }
+
+
+        const initProducts = (n) => {
+            
+            if (products.length === 0) {
+                for(let i = 1; i <= n; i++) {
+                    products.push(new Product(i,`Product ${i}`,Math.floor(Math.random() * 50000) + 1000, Math.floor(Math.random() * 5) + 1));
+                }
+            }
+            localStorage.setItem('products', JSON.stringify(products));
+        }
+
+        const divProducts = document.getElementById('products');
+        const divCart = document.getElementById('cart');
+
+        const createDivProduct = (prd) => {
+            const div = document.createElement('div');
+            const h3 = document.createElement('h3');
+            const h1 = document.createElement('h1');
+            const p = document.createElement('p');
+            const button = document.createElement('button');
+            const img = document.createElement('img');
+            div.className = 'product';
+            h3.innerText = prd.name;
+            h1.innerText = `$ ${Intl.NumberFormat("de-DE").format(prd.price)}`;
+            p.innerText = `In cart ${prd.incart} - Left ${prd.stock} units`;
+            button.innerHTML = 'Add to cart';
+            button.className = 'my-button';
+            button.onclick = function() {
+                products.forEach(p => {
+                    if (p.id === prd.id) {
+                        if (p.stock === 0) {
+                            alert(`${p.name} without stock!`);
+                        } else {
+                            p.stock -= 1;
+                            p.incart += 1;
+                            cart.addProduct(prd);
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            drawCart();
+                        }
+                    }
+                });
+                drawProducts();
+                localStorage.setItem('products', JSON.stringify(products));
+            }
+            img.src = prd.image;
+            div.appendChild(img);
+            div.appendChild(h3);
+            div.appendChild(h1);
+            div.appendChild(p);
+            div.appendChild(button);
+            return div;
+        }
+
+        const clearDiv = (div) => {
+            while (div.firstChild) {
+                div.removeChild(div.lastChild);
+            }
+        }
+
+        const drawProducts = () => {
+            clearDiv(divProducts);   
+            products.map(prd => {
+                divProducts.appendChild(createDivProduct(prd));
+            });
+        }
+
+        const createDivProductCart = (prd) => {
+            const div = document.createElement('div');
+            const p = document.createElement('p');
+            const img = document.createElement('img');
+            img.src = prd.image;
+            img.style = 'float:left; width:50%; height:50px';
+            p.innerHTML = `${prd.name} <br/>`;
+            p.innerHTML += `$ ${Intl.NumberFormat("de-DE").format(prd.price)} <br/>`;
+            p.innerHTML += `${prd.units} units <br/><br/><br/>`;
+            
+            div.appendChild(img);
+            div.appendChild(p);
+
+            return div;
+        }
+
+        const drawCart = () => {
+            clearDiv(divCart);
+            const p = document.createElement('p');
+            if (cart.products.length === 0) {
+                p.innerText = 'No products';
+                divCart.appendChild(p);
+            } else {
+                cart.products.map( prd => {
+                    divCart.appendChild(createDivProductCart(prd));
+                });
+                p.innerHTML = `Total of products $ ${Intl.NumberFormat("de-DE").format(cart.total)} <br/>`;
+                p.innerHTML += `Send $ ${ Intl.NumberFormat("de-DE").format(cart.tax * cart.dolar)} <br/>`;
+                p.innerHTML += `Total to pay $ ${ Intl.NumberFormat("de-DE").format(cart.total + cart.tax * cart.dolar)}`;
+                p.style = 'text-align:right';
+                divCart.appendChild(p);
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        const validateSession = () => {
+            const userSession = sessionStorage.getItem('user');
+
+            if (userSession !== null) {
+                document.getElementById("loged").style.display = 'inline';
+                document.getElementById("not-loged").style.display ='none';
+                document.getElementById("a-user").innerText = userSession;
+                buttonBuy.disabled = false;
+                buttonBuy.style.backgroundColor = '#4CAF50';
+                buttonBuy.style.cursor = 'pointer';
+            } else {
+                document.getElementById("not-loged").style.display = 'inline';
+                document.getElementById("loged").style.display = 'none';
+                buttonBuy.disabled = true;
+                buttonBuy.style.backgroundColor = 'grey';
+                buttonBuy.style.cursor = 'auto';
+            }
+        }
+
+        const resetValues = () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        validateSession();
+        loadStorage();
+        initProducts(5);
+        drawProducts();
+        drawCart();
+
+        /*
+
+        Descripción general del proyecto
+
+            Se debe realizar en modo SPA (Single Page Application) una tienda de comercio electrónico con las siguientes características:
+            Se debe utilizar HTML, CSS y Javascript o Typescript, no se permitirá el uso de frameworks (React, Angular u otro).
+            En caso de estar realizado en Typescript no debe incluir los archivos compilados a JS.
+            El proyecto solo debe contener 1 archivo html (index.html).
+            (done) El usuario debe ser capaz de ver una variedad de productos y añadirlos a un carro de compra.
+            (done) El usuario debe poder autenticarse, la validación debe ser estática y se debe aclarar cuál será el usuario y contraseña para uso del ejercicio.
+            (done) La posibilidad de iniciar sesión no debe estar disponible si el usuario ha iniciado sesión, y en ese caso debe mostrar el nombre del usuario.
+            (done) La cuenta de usuario no debe persistir cuando el usuario sale del sitio (cierra la pestaña o cierra el navegador).
+            (done) Cada producto debe tener 1 imagen, 1 título, 1 precio y stock disponible (entre 1 y 5 unidades).
+            (done) Cada producto debe indicar si ese producto se encuentra  en el carro de compras y en qué cantidad, permitiendo añadir más del mismo ítem.
+            (done) El usuario no debe ser capaz de solicitar una cantidad mayor a la disponible.
+            (done) El stock de productos debe persistir ante la recarga de la página y si el usuario sale del sitio.
+            (done) El carro de compra debe persistir sus datos aún cuando el usuario realice una recarga de la página o si el usuario sale del sitio.
+            (done) El carro de compra debe calcular el total de la compra en base al valor de los productos seleccionados, añadir un costo de $1500CLP por envío (US$ 2) y $350CLP (US$0,5) por cada producto.
+            (done) El carro de compra debe tener un botón de compra, que solo debe estar habilitado si el usuario ha iniciado sesión.
+            (done) Al realizar la compra, se debe simular una petición asíncrona que se demore 3 segundos en responder.
+            (done) Se debe notificar al usuario que la compra está siendo realizada, mientras esto sucede, el usuario no debe ser capaz de añadir nuevos productos ni realizar otra compra.
+            (done) Cuando se realiza la compra, el carro de compra debe ser vaciado y mostrar un mensaje de compra exitosa, pero permitiendo que el usuario sea capaz de volver a realizar una compra.
+            (done) El descuento de productos del stock general debe realizarse una vez realizada la compra
+            (done) Se debe añadir un botón al pie que permita restaurar los valores por defecto de la cantidad de productos.
+
+
+            Para la evaluación se considerarán las siguientes áreas:
+
+            (20 puntos) Limpieza del código, orden y fácil lectura/comprensión.
+            (10 puntos) Uso de ECMAScript 6 para declaración de variables, métodos de alto nivel, destructuración, entre otros.
+            (30 puntos) Separación de labores del código, ya sea mediante clases o programación funcional, cada parte del código debe tener una labor específica y única.
+            (20 puntos) Código a prueba de terceros, se realizará prueba simulando ser otro desarrollador que intentará añadir nuevos productos, modificar valores y cantidades de los ya existentes. El código debe estar preparado para estas labores y evitar que el nuevo desarrollador modifique otras variables que no correspondan, además se deben considerar estás modificaciones para el botón de restauración de las cantidades.
+            (60 puntos) Cumplimiento del listado de requerimientos.
+
+            Máximo puntaje posible a obtener 140 puntos
+            Nivel de exigencia para aprobación 60%
+            Puntaje mínimo para aprobación 83 puntos
+
+        */
+
+    </script>
+  
+</body>
+</html>
